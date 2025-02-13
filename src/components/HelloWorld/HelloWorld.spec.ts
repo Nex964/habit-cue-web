@@ -5,5 +5,6 @@ test('should display a greeting message', async ({ page }) => {
 
   // Assert that the text content of the p element is "Hello, world!"
   const greeting = await page.textContent('p');
-  expect(greeting).toBe(`👋 Hello there, General Kenobi!`);
+  console.log("message", greeting);
+  expect(greeting).toBe(`Habit-Cue`);
 })

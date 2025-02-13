@@ -6,10 +6,7 @@ import { NextIntlClientProvider, useMessages } from 'next-intl';
 
 import { AppConfig } from '@/utils/AppConfig';
 import Header from '@/components/Header';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ReactQueryProvider from '@/hooks/ReactQueryProvider';
-
-const queryClient = new QueryClient()
 
 export const metadata: Metadata = {
   icons: [
