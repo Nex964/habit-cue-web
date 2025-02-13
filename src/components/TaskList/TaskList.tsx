@@ -21,15 +21,15 @@ function TaskList() {
       {result.isSuccess && (
         <div className='flex flex-row'>
           <div className='flex flex-col dark:bg-zinc-800 bg-zinc-200 rounded-md p-2'>
-            <p className='p-2 text-sm font-medium text-zinc-500 uppercase'>To do {result?.data?.filter?.(task => !task.isCompleted)?.length}</p>
-            {result?.data?.filter?.(task => !task.isCompleted).map((task: any)=> {
+            <p className='p-2 text-sm font-medium text-zinc-500 uppercase'>To do {result?.data?.filter?.((task: any) => !task.isCompleted)?.length}</p>
+            {result?.data?.filter?.((task: any) => !task.isCompleted).map((task: any)=> {
               return <TaskListItem task={task}/>
             })}
           </div>
 
           <div className='flex flex-col dark:bg-zinc-800 bg-zinc-200 rounded-md p-2 ml-4'>
-            <p className='p-2 text-sm font-medium text-zinc-500 uppercase'>Completed {result?.data?.filter?.(task => task.isCompleted)?.length}</p>
-            {result?.data?.filter?.(task => task.isCompleted).map((task: any)=> {
+            <p className='p-2 text-sm font-medium text-zinc-500 uppercase'>Completed {result?.data?.filter?.((task: any) => task.isCompleted)?.length}</p>
+            {result?.data?.filter?.((task: any) => task.isCompleted).map((task: any)=> {
               return <TaskListItem task={task}/>
             })}
           </div>
