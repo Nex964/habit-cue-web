@@ -4,6 +4,8 @@
     "description": "Based on https://github.com/ixartz/Next-js-Boilerplate"
   },
   "common": {
-    "hello_message": "Hello there, {name}!"
+    "hello_message": "Hello there, {name}!",
+    "app_name": "Habit-Cue",
+    "task_list_title": "Task-List"
   }
 }

@@ -5,6 +5,11 @@ import { notFound } from 'next/navigation';
 import { NextIntlClientProvider, useMessages } from 'next-intl';
 
 import { AppConfig } from '@/utils/AppConfig';
+import Header from '@/components/Header';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import ReactQueryProvider from '@/hooks/ReactQueryProvider';
+
+const queryClient = new QueryClient()
 
 export const metadata: Metadata = {
   icons: [
@@ -42,14 +47,19 @@ export default function RootLayout(props: {
   const messages = useMessages();
 
   return (
-    <html lang={props.params.locale}>
+    <html className='bg-zinc-100 dark:bg-zinc-900' lang={props.params.locale}>
       <body>
-        <NextIntlClientProvider
-          locale={props.params.locale}
-          messages={messages}
-        >
-          {props.children}
-        </NextIntlClientProvider>
+        <ReactQueryProvider>
+          <NextIntlClientProvider
+            locale={props.params.locale}
+            messages={messages}
+          >
+            <Header/>
+            <div className='mx-12'>
+              {props.children}
+            </div>
+          </NextIntlClientProvider>
+        </ReactQueryProvider>
       </body>
     </html>
   );
