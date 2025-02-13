@@ -1,5 +1,4 @@
 import TaskList from '@/components/TaskList/TaskList';
-import { useQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
 
