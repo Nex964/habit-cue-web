@@ -3,6 +3,7 @@ import '@/css/global.css';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { NextIntlClientProvider, useMessages } from 'next-intl';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 import { AppConfig } from '@/utils/AppConfig';
 import Header from '@/components/Header';
@@ -47,15 +48,17 @@ export default function RootLayout(props: {
     <html className='bg-zinc-100 dark:bg-zinc-900' lang={props.params.locale}>
       <body>
         <ReactQueryProvider>
-          <NextIntlClientProvider
-            locale={props.params.locale}
-            messages={messages}
-          >
-            <Header/>
-            <div className='mx-12'>
-              {props.children}
-            </div>
-          </NextIntlClientProvider>
+          <GoogleOAuthProvider clientId="271070707523-1k6aroqdom9rr3s5ovs7ndjc5i2pqnfi.apps.googleusercontent.com">
+            <NextIntlClientProvider
+              locale={props.params.locale}
+              messages={messages}
+            >
+              <Header/>
+              <div className='mx-12'>
+                {props.children}
+              </div>
+            </NextIntlClientProvider>
+          </GoogleOAuthProvider>
         </ReactQueryProvider>
       </body>
     </html>

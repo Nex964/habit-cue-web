@@ -1,5 +1,4 @@
-import AppHello from "@/components/HelloWorld";
-
+import ReactGoogleLogin from '@/components/ReactGoogleLogin';
 import { getTranslations } from 'next-intl/server';
 
 export async function generateMetadata(props: { params: { locale: string } }) {
@@ -15,5 +14,9 @@ export async function generateMetadata(props: { params: { locale: string } }) {
 }
 
 export default function Index () {
-    return <AppHello />
+    return (
+      <div>
+        <ReactGoogleLogin/>
+      </div>
+    )
 }
