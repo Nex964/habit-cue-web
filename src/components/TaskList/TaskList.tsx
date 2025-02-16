@@ -5,11 +5,12 @@ import axios from 'axios';
 import React, { useEffect, useRef, useState } from 'react'
 import TaskListItem from '../TaskListItem/TaskListItem';
 import Tiptap from '../Tiptap';
-import { Add, Close } from '@mui/icons-material'
+import { Add, Close, Delete } from '@mui/icons-material'
 import {DndContext, PointerSensor, useSensor} from '@dnd-kit/core';
 import { Droppable } from '@/libs/dnd/Droppable';
 import { ENTER_KEY_CODE } from '@/utils/constants';
 import { createTask } from '@/utils/helper';
+import { undefined } from 'zod';
 
 
 const fetchAllTasks = async () => {
@@ -20,6 +21,10 @@ const updateTasks = async (tasks: any) => {
   return (await axios.post('https://habit-cue.glitch.me/habit-task', { tasks: [tasks], syncCode: 11 }))?.data
 }
 
+const deleteTasks = async (ids: any) => {
+  return (await axios.post('https://habit-cue.glitch.me/habit-task/delete-tasks', { taskIds: ids }))?.data
+}
+
 
 // Main Component
 function TaskList() {
@@ -27,7 +32,7 @@ function TaskList() {
   const createInputRef = useRef<HTMLInputElement>();
 
   const [showCreateInput, setShowCreateInput] = useState(false);
-  const [selectedTask, setSelectedTask] = useState();
+  const [selectedTask, setSelectedTask] = useState('');
 
   const [todoList, setTodoList] = useState([]);
   const [completedList, setCompletedList] = useState([]);
@@ -50,6 +55,17 @@ function TaskList() {
     }
   })
 
+  const taskDeleteMutation = useMutation({
+    mutationFn: (ids) => {
+      return deleteTasks(ids);
+    },
+    onSuccess: () => {
+      console.log("Refetching")
+      setSelectedTask('');
+      result.refetch();
+    }
+  })
+
   useEffect(() => {
     setTodoList(result?.data?.filter?.((task: any) => !task.isCompleted))
     setCompletedList(result?.data?.filter?.((task: any) => task.isCompleted))
@@ -64,7 +80,6 @@ function TaskList() {
 
     const item = result.data.filter(task => active.id === task._id)[0];
     
-    console.log("Stats", item, item.isCompleted, over.id)
     // ignore default cases
     if(item.isCompleted && over.id === "completed") return;
     if(!item.isCompleted && over.id === "todo") return;
@@ -83,7 +98,7 @@ function TaskList() {
   }
 
   const onEditorClose = () => {
-    setSelectedTask(undefined)
+    setSelectedTask('')
   }
 
   const handleCreateButtonClick = () => {
@@ -99,6 +114,14 @@ function TaskList() {
       }
     }
   }
+
+  const handleDeleteTask = (taskId: string) => {
+    if(confirm("Are you sure ?")){
+      taskDeleteMutation.mutate([taskId])
+    }
+  }
+
+  console.log("Selected", selectedTask)
 
   return (
     <div className='dark:text-white mt-4'>
@@ -149,13 +172,21 @@ function TaskList() {
               </Droppable>
             </div>
 
-            {selectedTask !== undefined && (
+            {selectedTask !== '' && (
               <div className='flex flex-col w-full ml-4 h-full bg-zinc-800 text-gray-300 rounded-md'>
                 
                 <div className='flex flex-row w-full items-center justify-between'>
-                  <h3 className='ml-3 font-semibold text-zinc-300 text-2xl'>{selectedTask?.title}</h3>
-                  <h3 className='ml-3 font-semibold text-zinc-300 text-sm'>{selectedTask?._id}</h3>
-                  <h3 className='ml-3 font-semibold text-zinc-300 text-sm'>{selectedTask?.createdBy}</h3>
+
+                  <h3 className='ml-3 font-semibold text-zinc-300 text-2xl flex flex-row items-center'>
+                    {selectedTask?.title}
+                    
+                    <Delete onClick={() => {
+                      handleDeleteTask(selectedTask._id);
+                    }} fontSize='large' className='m-2 p-2 cursor-pointer rounded-md hover:bg-zinc-700 active:bg-zinc-400'/>
+                  </h3>
+                  {/* <h3 className='ml-3 font-semibold text-zinc-300 text-sm'>{selectedTask?._id}</h3>
+                  <h3 className='ml-3 font-semibold text-zinc-300 text-sm'>{selectedTask?.createdBy}</h3> */}
+
                   <Close onClick={onEditorClose} className='m-2 text-white p-1 cursor-pointer rounded-md hover:bg-zinc-700 active:bg-zinc-400' fontSize='large'/>
                 </div>
 
