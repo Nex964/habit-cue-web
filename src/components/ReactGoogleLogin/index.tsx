@@ -25,7 +25,9 @@ export default function ReactGoogleLogin () {
 
     return (
       <div className="w-fit">
-        <button className="dark:text-white rounded-md hover:bg-zinc-700 active:bg-zinc-400 p-2 px-4" onClick={googleLogin}>Login</button>
+        <button 
+          className="dark:text-white rounded-md hover:bg-zinc-700 active:bg-zinc-400 p-2 px-4"
+          onClick={googleLogin}>Login</button>
       </div>
     )
 }
