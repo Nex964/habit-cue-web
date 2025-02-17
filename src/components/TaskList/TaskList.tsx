@@ -6,15 +6,15 @@ import React, { useEffect, useRef, useState } from 'react'
 import TaskListItem from '../TaskListItem/TaskListItem';
 import Tiptap from '../Tiptap';
 import { Add, Close, Delete } from '@mui/icons-material'
-import {DndContext, PointerSensor, useSensor} from '@dnd-kit/core';
+import { DndContext, PointerSensor, useSensor } from '@dnd-kit/core';
 import { Droppable } from '@/libs/dnd/Droppable';
 import { ENTER_KEY_CODE } from '@/utils/constants';
 import { createTask } from '@/utils/helper';
-import { undefined } from 'zod';
+import { useTranslations } from 'next-intl';
 
 
 const fetchAllTasks = async () => {
-  return (await axios.get('https://habit-cue.glitch.me/habit-task'))?.data
+  return (await axios.get('https://habit-cue.glitch.me/habit-task/tasks?id=projectTest'))?.data
 }
 
 const updateTasks = async (tasks: any) => {
@@ -29,10 +29,14 @@ const deleteTasks = async (ids: any) => {
 // Main Component
 function TaskList() {
 
+  const t = useTranslations('common')
+  
   const createInputRef = useRef<HTMLInputElement>();
 
-  const [showCreateInput, setShowCreateInput] = useState(false);
+  const [showCreateInput, setShowCreateInput] = useState(0);
   const [selectedTask, setSelectedTask] = useState('');
+
+  const [project, setProject] = useState();
 
   const [todoList, setTodoList] = useState([]);
   const [completedList, setCompletedList] = useState([]);
@@ -66,89 +70,122 @@ function TaskList() {
     }
   })
 
+  const projectFilter = (isCompleted: boolean) => (task: any) => {
+    return project === undefined ?
+      task.isCompleted == isCompleted && task.parent === null : 
+      task.isCompleted == isCompleted && project?._id === task.parent;
+  }
+
   useEffect(() => {
-    setTodoList(result?.data?.filter?.((task: any) => !task.isCompleted))
-    setCompletedList(result?.data?.filter?.((task: any) => task.isCompleted))
-  }, [result.data])
+    setTodoList(result?.data?.filter(projectFilter(false)))
+    setCompletedList(result?.data?.filter(projectFilter(true)))
+  }, [result.data, project])
 
   useEffect(() => {
     createInputRef.current?.focus();
   }, [showCreateInput])
 
   const handleOnDragEnd = (event) => {
-    const {over, active} = event;
+    const { over, active } = event;
 
     const item = result.data.filter(task => active.id === task._id)[0];
-    
-    // ignore default cases
-    if(item.isCompleted && over.id === "completed") return;
-    if(!item.isCompleted && over.id === "todo") return;
 
-    if(item.isCompleted){
+    // ignore default cases
+    if (item.isCompleted && over.id === "completed") return;
+    if (!item.isCompleted && over.id === "todo") return;
+
+    if (item.isCompleted) {
       setCompletedList(completedList.filter(task => active.id !== task._id));
       setTodoList([...todoList, item]);
     }
-    else{
+    else {
       setTodoList(todoList.filter(task => active.id !== task._id));
       setCompletedList([item, ...completedList]);
     }
-
     item.isCompleted = !item.isCompleted;
 
+    taskMutation.mutate({ id: item._id, isCompleted: item.isCompleted })
   }
 
   const onEditorClose = () => {
     setSelectedTask('')
   }
 
-  const handleCreateButtonClick = () => {
-    setShowCreateInput(true);
+  const handleCreateButtonClick = (val: number) => () => {
+    setShowCreateInput(val);
   }
 
   const handleCreateKeyDown = (event: any) => {
-    if(event.keyCode === ENTER_KEY_CODE){
-      setShowCreateInput(false);
-      if(createInputRef?.current?.value){
-        const newTaskObj = createTask(createInputRef.current?.value);
+    if (event.keyCode === ENTER_KEY_CODE) {
+      const type = showCreateInput === 1 ? 'task' : 'project';
+      setShowCreateInput(0);
+      if (createInputRef?.current?.value) {
+        const newTaskObj = createTask(createInputRef.current?.value, type, project?._id || null);
         taskMutation.mutate(newTaskObj);
       }
     }
   }
 
   const handleDeleteTask = (taskId: string) => {
-    if(confirm("Are you sure ?")){
+    if (confirm("Are you sure ?")) {
       taskDeleteMutation.mutate([taskId])
     }
   }
 
-  console.log("Selected", selectedTask)
+  const handleOnItemClick = (task: any) => {
+    if(task.type === 'project')
+      setProject(task);
+
+    setSelectedTask(task)
+  }
 
   return (
-    <div className='dark:text-white mt-4'>
+    <div className='dark:text-white '>
+      <p className='text-neutral-600 dark:text-neutral-300 font-semibold text-xl mb-4'>
+        {t('task_list_title')}
+        
+        {project && (
+          <span className='font-normal text-neutral-500 dark:text-neutral-500'>
+            {project === undefined ? '' : ' for ' + project.title}
+            <Close onClick={() => {
+                setProject(undefined) 
+                setSelectedTask('')
+              }} 
+              className=' text-white p-1 cursor-pointer rounded-md hover:bg-zinc-700 active:bg-zinc-400' fontSize='large' />
+          </span>
+        )}
+      </p>
+
       {result.isLoading && <p>Loading</p>}
       {result.isError && <p>{result?.error.message}</p>}
       {result.isSuccess && (
         <DndContext sensors={[sensors]} onDragEnd={handleOnDragEnd}>
           <div className='flex flex-row items-start'>
-            <div className='flex flex-col dark:bg-zinc-800 bg-zinc-200 rounded-md p-2'>
+            <div className='min-w-72 flex flex-col dark:bg-zinc-800 bg-zinc-200 rounded-md p-2'>
               <Droppable id="todo">
-              <p className='p-2 text-sm font-medium text-zinc-500 uppercase'>To do {todoList?.length}</p>
-              {todoList?.map((task: any)=> {
-                return <TaskListItem onClick={setSelectedTask} task={task}/>
-              })}
+                <p className='p-2 text-sm font-medium text-zinc-500 uppercase'>To do {todoList?.length}</p>
+                {todoList?.map((task: any) => {
+                  return <TaskListItem onClick={handleOnItemClick} task={task} />
+                })}
               </Droppable>
 
               {!showCreateInput && (
-                <button onClick={handleCreateButtonClick} className='flex flex-row items-center text-gray-300 text-sm active:bg-zinc-600 hover:bg-zinc-700 rounded-sm' > 
-                  <Add className='m-2' fontSize='small'/> Create new task
+                <button onClick={handleCreateButtonClick(1)} className='flex flex-row items-center pr-2 text-gray-300 text-sm active:bg-zinc-600 hover:bg-zinc-700 rounded-sm' >
+                  <Add className='m-2' fontSize='small' /> Create new Task
                 </button>
               )}
 
-              {showCreateInput && (
-                <input 
-                  ref={createInputRef} 
-                  onBlur={() => setShowCreateInput(false)} 
-                  placeholder='What needs to be done?' 
+              {!showCreateInput && project === undefined && (
+                <button onClick={handleCreateButtonClick(2)} className='flex flex-row items-center pr-2 text-gray-300 text-sm active:bg-zinc-600 hover:bg-zinc-700 rounded-sm' >
+                  <Add className='m-2' fontSize='small' /> Create new Project
+                </button>
+              )}
+
+              {showCreateInput > 0 && (
+                <input
+                  ref={createInputRef}
+                  onBlur={() => setShowCreateInput(0)}
+                  placeholder={showCreateInput === 1 ? 'What needs to be done?' : 'Name your project'}
                   onKeyDown={handleCreateKeyDown}
                   className='
                     dark:text-gray-400 dark:bg-zinc-900 
@@ -158,42 +195,42 @@ function TaskList() {
                     rounded-sm
                     text-sm
                     w-64 h-16 p-4 my-1'
-                  />
+                />
               )}
-              
+
             </div>
 
-            <div className='flex flex-col dark:bg-zinc-800 bg-zinc-200 rounded-md p-2 ml-4'>
+            <div className='min-w-72 flex flex-col dark:bg-zinc-800 bg-zinc-200 rounded-md p-2 ml-4'>
               <Droppable id="completed">
-              <p className='p-2 text-sm font-medium text-zinc-500 uppercase'>Completed {completedList?.length}</p>
-              {completedList?.map((task: any)=> {
-                return <TaskListItem onClick={setSelectedTask} task={task}/>
-              })}
+                <p className='p-2 text-sm font-medium text-zinc-500 uppercase'>Completed {completedList?.length}</p>
+                {completedList?.map((task: any) => {
+                  return <TaskListItem onClick={handleOnItemClick} task={task} />
+                })}
               </Droppable>
             </div>
 
             {selectedTask !== '' && (
               <div className='flex flex-col w-full ml-4 h-full bg-zinc-800 text-gray-300 rounded-md'>
-                
+
                 <div className='flex flex-row w-full items-center justify-between'>
 
                   <h3 className='ml-3 font-semibold text-zinc-300 text-2xl flex flex-row items-center'>
                     {selectedTask?.title}
-                    
+
                     <Delete onClick={() => {
                       handleDeleteTask(selectedTask._id);
-                    }} fontSize='large' className='m-2 p-2 cursor-pointer rounded-md hover:bg-zinc-700 active:bg-zinc-400'/>
+                    }} fontSize='large' className='m-2 p-2 cursor-pointer rounded-md hover:bg-zinc-700 active:bg-zinc-400' />
                   </h3>
                   {/* <h3 className='ml-3 font-semibold text-zinc-300 text-sm'>{selectedTask?._id}</h3>
                   <h3 className='ml-3 font-semibold text-zinc-300 text-sm'>{selectedTask?.createdBy}</h3> */}
 
-                  <Close onClick={onEditorClose} className='m-2 text-white p-1 cursor-pointer rounded-md hover:bg-zinc-700 active:bg-zinc-400' fontSize='large'/>
+                  <Close onClick={onEditorClose} className='m-2 text-white p-1 cursor-pointer rounded-md hover:bg-zinc-700 active:bg-zinc-400' fontSize='large' />
                 </div>
 
-                <Tiptap 
+                <Tiptap
                   loading={taskMutation.isPending}
-                  onSave={(newNotes) => taskMutation.mutate({id: selectedTask._id, notes: newNotes})} 
-                  content={selectedTask?.notes || ""}/>
+                  onSave={(newNotes) => taskMutation.mutate({ id: selectedTask._id, notes: newNotes })}
+                  content={selectedTask?.notes || ""} />
               </div>
             )}
           </div>

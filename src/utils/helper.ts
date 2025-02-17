@@ -1,14 +1,14 @@
 import { v4 as uuidv4 } from 'uuid';
 
-export function createTask(title: string){
+export function createTask(title: string, type: string, parent: null | string = null){
   return {
     title: title,
     createdBy: localStorage.getItem("userId"), 
     createdAt: getCurrentISO8601Time(), 
     isCompleted: false, 
     id: uuidv4(), 
-    parent: null, 
-    type: "task", 
+    parent: parent, 
+    type: type, 
     childs: null 
   } 
 }
