@@ -1,7 +1,7 @@
-import React, { type ReactElement } from 'react';
+import React from 'react';
 import {useDroppable} from '@dnd-kit/core';
 
-export function Droppable(props: { id: string, children: ReactElement }) {
+export function Droppable(props: any) {
   const {isOver, setNodeRef} = useDroppable({
     id: props.id,
   });
