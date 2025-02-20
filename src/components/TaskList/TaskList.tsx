@@ -6,7 +6,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import TaskListItem from '../TaskListItem/TaskListItem';
 import Tiptap from '../Tiptap';
 import { Add, Close, Delete } from '@mui/icons-material'
-import { DndContext, PointerSensor, useSensor } from '@dnd-kit/core';
+import { DndContext, PointerSensor, useSensor, type DragEndEvent } from '@dnd-kit/core';
 import { Droppable } from '@/libs/dnd/Droppable';
 import { ENTER_KEY_CODE } from '@/utils/constants';
 import { createTask } from '@/utils/helper';
@@ -14,7 +14,7 @@ import { useTranslations } from 'next-intl';
 
 
 const fetchAllTasks = async () => {
-  return (await axios.get('https://habit-cue.glitch.me/habit-task/tasks?id=projectTest'))?.data
+  return (await axios.get('https://habit-cue.glitch.me/habit-task/tasks?id=' + localStorage.getItem('userId')))?.data
 }
 
 const updateTasks = async (tasks: any) => {
@@ -25,21 +25,47 @@ const deleteTasks = async (ids: any) => {
   return (await axios.post('https://habit-cue.glitch.me/habit-task/delete-tasks', { taskIds: ids }))?.data
 }
 
+const Shimmer = () => {
+  return (
+    <div className="flex text-white h-70">
+      {/* Left Sidebar */}
+      <div className="w-72 bg-zinc-800 p-2 rounded-lg mr-4">
+        <div className="h-6 w-24 bg-zinc-700 rounded animate-pulse mb-4"></div>
+        <div className="space-y-3">
+          <div className="h-12 w-full bg-zinc-700 rounded animate-pulse"></div>
+          <div className="h-12 w-full bg-zinc-700 rounded animate-pulse"></div>
+        </div>
+        <div className="mt-6 space-y-3">
+          <div className="h-10 w-3/4 bg-zinc-700 rounded animate-pulse"></div>
+          <div className="h-10 w-3/4 bg-zinc-700 rounded animate-pulse"></div>
+        </div>
+      </div>
+
+      {/* Right Sidebar */}
+      <div className="w-72 bg-zinc-800 p-2 rounded-lg ">
+        <div className="h-6 w-24 bg-zinc-700 rounded animate-pulse mb-4"></div>
+        <div className="h-16 w-full bg-zinc-700 rounded animate-pulse"></div>
+      </div>
+    </div>
+  );
+};
+
+// export default Shimmer;
 
 // Main Component
 function TaskList() {
 
   const t = useTranslations('common')
   
-  const createInputRef = useRef<HTMLInputElement>();
+  const createInputRef = useRef<HTMLInputElement>(null);
 
   const [showCreateInput, setShowCreateInput] = useState(0);
-  const [selectedTask, setSelectedTask] = useState('');
+  const [selectedTask, setSelectedTask] = useState<HabitTaskItem | undefined>(undefined);
 
-  const [project, setProject] = useState();
+  const [project, setProject] = useState<HabitTaskItem | undefined>();
 
-  const [todoList, setTodoList] = useState([]);
-  const [completedList, setCompletedList] = useState([]);
+  const [todoList, setTodoList] = useState<HabitTaskItem[]>([]);
+  const [completedList, setCompletedList] = useState<HabitTaskItem[]>([]);
 
   const sensors = useSensor(PointerSensor, {
     activationConstraint: {
@@ -49,7 +75,7 @@ function TaskList() {
 
   const result = useQuery({ queryKey: ['todos'], queryFn: fetchAllTasks })
 
-  const taskMutation = useMutation({
+  const taskMutation = useMutation<any, Error, Partial<HabitTaskItem>>({
     mutationFn: (newTask) => {
       return updateTasks(newTask);
     },
@@ -59,13 +85,13 @@ function TaskList() {
     }
   })
 
-  const taskDeleteMutation = useMutation({
+  const taskDeleteMutation = useMutation<any, Error, string[]>({
     mutationFn: (ids) => {
       return deleteTasks(ids);
     },
     onSuccess: () => {
       console.log("Refetching")
-      setSelectedTask('');
+      setSelectedTask(undefined);
       result.refetch();
     }
   })
@@ -85,17 +111,17 @@ function TaskList() {
     createInputRef.current?.focus();
   }, [showCreateInput])
 
-  const handleOnDragEnd = (event) => {
+  const handleOnDragEnd = (event: DragEndEvent) => {
     const { over, active } = event;
 
-    const item = result.data.filter(task => active.id === task._id)[0];
+    const item = result.data.filter((task: HabitTaskItem) => active.id === task._id)[0];
 
     // ignore default cases
-    if (item.isCompleted && over.id === "completed") return;
-    if (!item.isCompleted && over.id === "todo") return;
+    if (item.isCompleted && over?.id === "completed") return;
+    if (!item.isCompleted && over?.id === "todo") return;
 
     if (item.isCompleted) {
-      setCompletedList(completedList.filter(task => active.id !== task._id));
+      setCompletedList(completedList.filter((task: HabitTaskItem) => active.id !== task._id));
       setTodoList([...todoList, item]);
     }
     else {
@@ -108,7 +134,7 @@ function TaskList() {
   }
 
   const onEditorClose = () => {
-    setSelectedTask('')
+    setSelectedTask(undefined)
   }
 
   const handleCreateButtonClick = (val: number) => () => {
@@ -149,14 +175,16 @@ function TaskList() {
             {project === undefined ? '' : ' for ' + project.title}
             <Close onClick={() => {
                 setProject(undefined) 
-                setSelectedTask('')
+                setSelectedTask(undefined)
               }} 
               className=' text-white p-1 cursor-pointer rounded-md hover:bg-zinc-700 active:bg-zinc-400' fontSize='large' />
           </span>
         )}
       </p>
 
-      {result.isLoading && <p>Loading</p>}
+      {/* {result.isLoading && <p>Loading</p>} */}
+      {result.isLoading && <Shimmer/>}
+       {/* <Shimmer/> */}
       {result.isError && <p>{result?.error.message}</p>}
       {result.isSuccess && (
         <DndContext sensors={[sensors]} onDragEnd={handleOnDragEnd}>
@@ -209,7 +237,7 @@ function TaskList() {
               </Droppable>
             </div>
 
-            {selectedTask !== '' && (
+            {selectedTask !== undefined && (
               <div className='flex flex-col w-full ml-4 h-full bg-zinc-800 text-gray-300 rounded-md'>
 
                 <div className='flex flex-row w-full items-center justify-between'>
@@ -218,7 +246,8 @@ function TaskList() {
                     {selectedTask?.title}
 
                     <Delete onClick={() => {
-                      handleDeleteTask(selectedTask._id);
+                      if(selectedTask._id !== undefined)
+                        handleDeleteTask(selectedTask._id);
                     }} fontSize='large' className='m-2 p-2 cursor-pointer rounded-md hover:bg-zinc-700 active:bg-zinc-400' />
                   </h3>
                   {/* <h3 className='ml-3 font-semibold text-zinc-300 text-sm'>{selectedTask?._id}</h3>
@@ -229,7 +258,7 @@ function TaskList() {
 
                 <Tiptap
                   loading={taskMutation.isPending}
-                  onSave={(newNotes) => taskMutation.mutate({ id: selectedTask._id, notes: newNotes })}
+                  onSave={(newNotes: string) => taskMutation.mutate({ id: selectedTask._id, notes: newNotes })}
                   content={selectedTask?.notes || ""} />
               </div>
             )}

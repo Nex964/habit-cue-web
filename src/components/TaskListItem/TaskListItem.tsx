@@ -1,8 +1,9 @@
+// @ts-ignore
 import { Draggable } from '@/libs/dnd/Draggable'
 import React from 'react'
 
 
-function TaskListItem({task, onClick}: {task: any, onClick: (content: string) => {} }) {
+function TaskListItem({task, onClick}: {task: any, onClick: (task: string) => void }) {
 
   return (
     <Draggable id={task._id}>
@@ -15,7 +16,8 @@ function TaskListItem({task, onClick}: {task: any, onClick: (content: string) =>
          border 
         rounded-sm
         text-sm
-        w-64 h-16 p-4 my-1`}
+        ${task.isCompleted ? 'line-through' : ''}
+        w-64 min-h-20 p-4 my-1`}
       >
         {task.type === 'project' ? '⦿ ': ''}
         {task.title}
