@@ -1,5 +1,4 @@
 import TaskList from '@/components/TaskList/TaskList';
-import { useTranslations } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
 
 export async function generateMetadata(props: { params: { locale: string } }) {
