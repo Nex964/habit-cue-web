@@ -7,7 +7,7 @@ export function createTask(title: string, type: TaskType, parent: null | string 
     createdAt: getCurrentISO8601Time(), 
     isCompleted: false, 
     id: uuidv4(), 
-    parent: parent || undefined, 
+    parent: parent, 
     type: type, 
     childs: null 
   } 

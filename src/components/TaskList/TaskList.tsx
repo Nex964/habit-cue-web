@@ -14,7 +14,8 @@ import { useTranslations } from 'next-intl';
 
 
 const fetchAllTasks = async () => {
-  return (await axios.get('https://habit-cue.glitch.me/habit-task/tasks?id=' + localStorage.getItem('userId')))?.data
+  // return (await axios.get('https://habit-cue.glitch.me/habit-task/tasks?id=' + localStorage.getItem('userId')))?.data
+  return (await axios.get('https://habit-cue.glitch.me/habit-task/tasks'))?.data
 }
 
 const updateTasks = async (tasks: any) => {
