@@ -13,7 +13,7 @@ type HabitTaskItem = {
   updatedAt?: string,
   createdBy?: string | undefined
   isCompleted?: boolean
-  parent?: string | undefined
+  parent?: string | null
   childs?: string[] | null | undefined
   type?: TaskType
   extraData?: {
