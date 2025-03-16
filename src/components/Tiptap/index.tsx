@@ -5,7 +5,8 @@ import TextStyle from '@tiptap/extension-text-style'
 import TaskItem from '@tiptap/extension-task-item'
 import TaskList from '@tiptap/extension-task-list'
 import Underline from '@tiptap/extension-underline'
-import { EditorContent, mergeAttributes, Node, useEditor, type Editor } from '@tiptap/react'
+import { EditorContent, useEditor, type Editor } from '@tiptap/react'
+import { type Level } from '@tiptap/extension-heading';
 import StarterKit from '@tiptap/starter-kit'
 import React, { useEffect, useState } from 'react'
 
@@ -237,7 +238,7 @@ import React, { useEffect, useState } from 'react'
 // CustomElement;
 
 
-const MenuBar = ({editor}: { editor: Editor }) => {
+const MenuBar = ({editor}: { editor: Editor | null }) => {
   // const { editor } = useCurrentEditor()
 
   if (!editor) {
@@ -296,7 +297,7 @@ const MenuBar = ({editor}: { editor: Editor }) => {
     {[1, 2, 3, 4, 5].map((level) => (
       <button
         key={level}
-        onClick={() => editor.chain().focus().toggleHeading({ level }).run()}
+        onClick={() => editor.chain().focus().toggleHeading({ level } as { level: Level }).run()}
         className={`mx-2 ${editor.isActive("heading", { level }) ? "is-active" : ""}`}
       >
         H{level}
@@ -377,6 +378,7 @@ const extensions = [
   }),
   // CustomElement,
   TextStyle.configure({ 
+    // @ts-ignore
     types: [ListItem.name]
   }),
 ]
@@ -412,7 +414,7 @@ const extensions = [
 // </blockquote>
 // `
 
-export default ({content, onSave, loading}: {content: string, loading: boolean, onSave: (newNote: string) => {}}) => {
+export default ({content, onSave, loading}: {content: string, loading: boolean, onSave: (newNote: string) => void}) => {
 
   const [isEdited, setIsEdited] = useState(false);
   
@@ -444,7 +446,7 @@ export default ({content, onSave, loading}: {content: string, loading: boolean, 
       <EditorContent onFocus={() => setIsEdited(true)} className='bg-zinc-700 rounded-sm m-2 p-2' editor={editor}>
       </EditorContent>
 
-      {loading && <span class="loader"></span>}
+      {loading && <span className="loader"></span>}
       {isEdited && <button onClick={() => onSave(editor?.getHTML() || "")} className='px-4 py-2 m-2 mt-1 transition duration-300 
         hover:shadow-lg hover:bg-blue-400
         

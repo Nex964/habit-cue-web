@@ -27,6 +27,7 @@ export default function ReactGoogleLogin () {
       <div className="w-fit">
         <button 
           className="dark:text-white rounded-md hover:bg-zinc-700 active:bg-zinc-400 p-2 px-4"
+          // @ts-ignore
           onClick={googleLogin}>Login</button>
       </div>
     )

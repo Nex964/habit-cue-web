@@ -1,14 +1,14 @@
 import { v4 as uuidv4 } from 'uuid';
 
-export function createTask(title: string){
+export function createTask(title: string, type: TaskType, parent: null | string = null): HabitTaskItem{
   return {
     title: title,
-    createdBy: localStorage.getItem("userId"), 
+    createdBy: localStorage.getItem("userId") || undefined,
     createdAt: getCurrentISO8601Time(), 
     isCompleted: false, 
     id: uuidv4(), 
-    parent: null, 
-    type: "task", 
+    parent: parent || undefined, 
+    type: type, 
     childs: null 
   } 
 }

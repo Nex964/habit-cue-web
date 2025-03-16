@@ -1,5 +1,4 @@
 import TaskList from '@/components/TaskList/TaskList';
-import { useTranslations } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
 
 export async function generateMetadata(props: { params: { locale: string } }) {
@@ -15,15 +14,10 @@ export async function generateMetadata(props: { params: { locale: string } }) {
 }
 
 export default function Index() {
-  const t = useTranslations('common')
 
   return (
     <>
     <div>
-      <p className='text-neutral-600 dark:text-neutral-300 font-semibold text-xl'>
-        {t('task_list_title')}
-      </p>
-
       <TaskList />
 
     </div>
